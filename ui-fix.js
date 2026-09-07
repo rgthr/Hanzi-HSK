@@ -1,5 +1,5 @@
 (()=>{
-const BUILD='20260908.3';
+const BUILD='20260908.4';
 const css=`
 .buildTag{display:none!important}
 #settingsSheet.sheet{align-items:flex-start!important;justify-content:flex-end!important;background:transparent!important;padding:calc(54px + env(safe-area-inset-top)) 10px 0!important}
