@@ -1,5 +1,5 @@
 /* HANZI CONSOLIDATED BUILD
-   Version: CONSOLIDATED 1.0.0
+   Version: CONSOLIDATED 1.1.0 — AUDITED BASELINE
    Branch: clean-consolidation
    Purpose: one stylesheet, one controller, no interaction patch stack.
 */
@@ -8,7 +8,7 @@
 #board.consolidated-board{display:grid!important;grid-template-columns:repeat(2,minmax(0,1fr))!important;grid-template-rows:repeat(3,minmax(0,1fr))!important;gap:8px!important;overflow:hidden!important;touch-action:none!important;position:relative!important}
 #board.consolidated-board>.tile{width:100%!important;height:100%!important;min-width:0!important;min-height:0!important;margin:0!important}
 .lessonDeckDots{height:15px;display:flex;justify-content:center;align-items:center;gap:6px}.lessonDeckDots i{width:5px;height:5px;border-radius:50%;background:var(--line)}.lessonDeckDots i.on{width:14px;border-radius:9px;background:var(--ink)}
-.consolidated-badge{font-size:9px;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);font-weight:750;margin-left:7px}
+.consolidated-badge{font-size:9px;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);font-weight:750;margin-left:7px}.consolidated-version{display:flex;justify-content:space-between;align-items:center;padding:13px 0;border-bottom:1px solid var(--line);font-size:12px}.consolidated-version span{color:var(--muted);font-size:11px}
 #pager.consolidated-pager{position:relative!important;display:block!important;overflow:hidden!important;touch-action:none!important;scroll-snap-type:none!important}.consolidated-track{height:100%;display:flex;will-change:transform;backface-visibility:hidden}.consolidated-track>.fp{position:relative!important;flex:0 0 100%!important;width:100%!important;min-width:100%!important;height:100%!important;transform:none!important;transition:none!important;scroll-snap-align:none!important}
 #pager.consolidated-pager.settling .consolidated-track{transition:transform var(--settle,.27s) cubic-bezier(.22,1,.36,1)}
 .mainRecall{display:flex;flex-direction:column;align-items:center;cursor:pointer;background:transparent!important;border:0!important;box-shadow:none!important;padding:0!important;margin:0!important;min-width:0!important;border-radius:0!important}.mainRecall .py,.mainRecall .meaning{transition:filter .1s ease,opacity .1s ease}.mainRecall.hidden .py,.mainRecall.hidden .meaning{filter:blur(7px)!important;opacity:.3!important;user-select:none!important}.mainRecall:not(.hidden) .py,.mainRecall:not(.hidden) .meaning{filter:none!important;opacity:1!important}
