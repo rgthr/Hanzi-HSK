@@ -1,40 +1,9 @@
 (()=>{
-const BUILD='20260908.31';
+const BUILD='20260908.33';
 const css=document.createElement('style');css.textContent=`
-/* Explore: neutral interiors; gradient only on the rim. */
-#wall .wt.ex-unseen,#wall .wt.ex-learning,#wall .wt.ex-mastered,#wall .wt.ex-struggle{color:var(--ink)!important;text-shadow:none!important;border:2px solid transparent!important;background:linear-gradient(var(--paper),var(--paper)) padding-box,linear-gradient(135deg,#d9dee7,#eef1f5) border-box!important}
-/* Learning = purple only. */
 #wall .wt.ex-learning{background:linear-gradient(var(--paper),var(--paper)) padding-box,linear-gradient(135deg,#7c3aed,#a855f7,#c084fc) border-box!important}
-/* Mastered = green only, no blue. */
 #wall .wt.ex-mastered{background:linear-gradient(var(--paper),var(--paper)) padding-box,linear-gradient(135deg,#16a34a,#34d399,#86efac) border-box!important}
-#wall .wt.ex-struggle{background:linear-gradient(var(--paper),var(--paper)) padding-box,linear-gradient(135deg,#fb7185,#ec4899,#c026d3) border-box!important}
-.v31write .quizBody{display:flex!important;flex-direction:column!important;align-items:center!important;justify-content:center!important;gap:14px!important;text-align:center!important}
-.v31write .practiceHero{font-size:82px;line-height:1;font-family:"Songti SC","STSong",serif}
-.v31write .practicePrompt{font-size:13px;color:var(--muted);max-width:290px;line-height:1.4}
-.v31write .stroke{width:min(100%,340px);margin-top:4px!important}
-.v31write .finishQuiz{display:block!important;margin-top:4px!important}
-`;
-document.head.appendChild(css);
-
-function makeExactPractice(slide,set){
-  if(!slide||slide.dataset.v31Exact)return;slide.dataset.v31Exact='1';
-  const meaning=slide.querySelector('.writePrompt .meaning')?.textContent||'';
-  const py=slide.querySelector('.writePrompt .pinyin')?.textContent||'';
-  const c=(set||[]).find(x=>x.contextMeaning===meaning&&x.p===py)||(set||[])[0];
-  if(!c)return;
-  slide.classList.add('v31write');
-  const body=slide.querySelector('.quizBody');if(!body)return;
-  body.innerHTML=`<div class="practiceHero">${c.h}</div><div class="practicePrompt">Use the same writing practice as on the learning card.</div><button type="button" class="stroke" data-v31-practice>✍️ Practice stroke order</button><button type="button" class="finishQuiz" data-v31-finish>Finish quiz</button>`;
-  slide._start=()=>{};slide.dataset.started='1';slide.dataset.preloaded='1';
-  body.querySelector('[data-v31-practice]').onclick=e=>{e.preventDefault();e.stopPropagation();openStroke(c)};
-  body.querySelector('[data-v31-finish]').onclick=e=>{e.preventDefault();e.stopPropagation();closeFocus();nextBoard()};
-}
-const prev=window.openFocus;
-window.openFocus=function(set,start=0){
-  const out=prev(set,start);
-  const slide=document.querySelector('.v26write');
-  if(slide)makeExactPractice(slide,set);
-  return out;
-};
-const vr=document.querySelector('#settingsSheet .versionRow b');if(vr)vr.textContent='v '+BUILD;window.__hanziBuild=BUILD;
-})();
+.v31write .quizBody{display:flex!important;flex-direction:column!important;align-items:stretch!important;justify-content:flex-start!important;padding:8px 14px 12px!important;text-align:center!important;min-height:0!important}
+.v31write .practicePrompt{font-size:13px;color:var(--muted);margin:2px 0 7px}.v31write .embeddedCanvas{width:min(72vw,320px);aspect-ratio:1;margin:0 auto 7px;background:var(--paper);border:1px solid var(--line);border-radius:12px;position:relative;overflow:hidden;touch-action:none!important}.v31write .embeddedTarget{position:absolute;inset:0;touch-action:none!important}.v31write .embeddedStatus{font-size:13px;color:var(--muted);min-height:20px;margin:1px 0 7px}.v31write .finishQuiz{display:block!important;width:100%!important;min-height:46px!important;margin:auto 0 0!important;flex:none!important}`;document.head.appendChild(css);
+function makePractice(slide,set){if(!slide||slide.dataset.v33Exact)return;slide.dataset.v33Exact='1';const meaning=slide.querySelector('.writePrompt .meaning')?.textContent||'',py=slide.querySelector('.writePrompt .pinyin')?.textContent||'';const c=(set||[]).find(x=>x.contextMeaning===meaning&&x.p===py)||(set||[])[0];if(!c)return;slide.classList.add('v31write');const body=slide.querySelector('.quizBody');if(!body)return;body.innerHTML=`<div class="practicePrompt">Write <b>${c.h}</b> in stroke order</div><div class="embeddedCanvas"><div class="embeddedTarget"></div></div><div class="embeddedStatus">Loading stroke practice…</div><button type="button" class="finishQuiz" data-finish>Finish quiz</button>`;const target=body.querySelector('.embeddedTarget'),box=body.querySelector('.embeddedCanvas'),status=body.querySelector('.embeddedStatus');function start(){target.innerHTML='';if(typeof HanziWriter==='undefined'){status.textContent='Stroke data unavailable.';return}const z=Math.floor(box.clientWidth||300),w=HanziWriter.create(target,c.h,{width:z,height:z,padding:26,showOutline:true,showCharacter:false});status.textContent='Start with the first stroke.';w.quiz({showHintAfterMisses:1,highlightOnComplete:true,drawingWidth:13,onCorrectStroke:d=>status.textContent=d.strokesRemaining?`${d.strokesRemaining} stroke${d.strokesRemaining===1?'':'s'} left`:'Finishing…',onComplete:()=>{status.textContent='Character complete ✓';try{bump(c,'writing',true)}catch{}}})}slide._start=start;slide.dataset.started='1';slide.dataset.preloaded='1';requestAnimationFrame(()=>requestAnimationFrame(start));body.querySelector('[data-finish]').onclick=e=>{e.preventDefault();e.stopPropagation();closeFocus();nextBoard()}}
+const prev=window.openFocus;window.openFocus=function(set,start=0){const out=prev(set,start);const slide=document.querySelector('.v26write');if(slide)makePractice(slide,set);return out};const vr=document.querySelector('#settingsSheet .versionRow b');if(vr)vr.textContent='v '+BUILD;window.__hanziBuild=BUILD})();
