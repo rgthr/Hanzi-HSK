@@ -1,1 +1,44 @@
-<!doctype html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover,user-scalable=no"><meta name="apple-mobile-web-app-capable" content="yes"><meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate"><title>Hanzi</title></head><body><script>(async()=>{const BUILD='20260908.39';const r=await fetch('./core.html?b='+BUILD,{cache:'no-store'});if(!r.ok)throw new Error('core');let t=await r.text();t=t.replace('</body>','<script src="./patch.js?b='+BUILD+'"><\/script><script src="./ui-fix.js?b='+BUILD+'"><\/script><script src="./learning-flow.js?b='+BUILD+'"><\/script><script src="./stroke-ui.js?b='+BUILD+'"><\/script><script src="./stroke-engine-v8.js?b='+BUILD+'"><\/script><script src="./polish-v9.js?b='+BUILD+'"><\/script><script src="./related-compact-v12.js?b='+BUILD+'"><\/script><script src="./sentence-quality-v15.js?b='+BUILD+'"><\/script><script src="./app-v26.js?b='+BUILD+'"><\/script><script src="./interaction-v29.js?b='+BUILD+'"><\/script><script src="./quiz-practice-v30.js?b='+BUILD+'"><\/script><script src="./lesson-ux-v32.js?b='+BUILD+'"><\/script></body>');document.open();document.write(t);document.close()})().catch(()=>document.body.innerHTML='<div style="font-family:system-ui;padding:32px">Could not load Hanzi. Reopen the app.</div>');</script></body></html>
+<!doctype html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover,user-scalable=no">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="Hanzi">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="theme-color" content="#191919">
+<meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+<link rel="manifest" href="./manifest.webmanifest?v=2.4.0">
+<title>Hanzi</title>
+<script src="https://cdn.jsdelivr.net/npm/hanzi-writer@3.7.3/dist/hanzi-writer.min.js"></script>
+<script>
+/* Production 2.4.0: one brush setting for both practice + quiz. */
+(()=>{const original=HanziWriter.create.bind(HanziWriter);HanziWriter.create=(el,ch,opts={})=>original(el,ch,{...opts,drawingWidth:44,drawingColor:'#2f3437'})})();
+</script>
+<link rel="stylesheet" href="./preview-consolidated.css?v=2.4.0">
+<style>
+.filters .chip{border-width:2px!important;font-weight:650}
+.filters .chip[data-filter="new"]{border-color:#d9dee7!important;background:linear-gradient(135deg,#f4f6f8,#ffffff)!important}
+.filters .chip[data-filter="learning"]{border-color:#3b82f6!important;background:linear-gradient(135deg,#eaf2ff,#f7faff)!important}
+.filters .chip[data-filter="mastered"]{border-color:#22c55e!important;background:linear-gradient(135deg,#eaf9ef,#f7fff9)!important}
+.filters .chip[data-filter="struggle"]{border-color:#ec4899!important;background:linear-gradient(135deg,#fff0f6,#fff8fb)!important}
+.filters .chip.on{box-shadow:inset 0 0 0 1px var(--ink)!important;font-weight:800}
+</style>
+</head>
+<body>
+<div class="app">
+  <header class="top"><div class="brand"><b>汉字</b>Hanzi</div><button class="round" id="settings" aria-label="Settings">•••</button></header>
+  <section id="learnScreen" class="screen learn on"><div class="hero"><small>HSK 1 · ADAPTIVE CHARACTER LEARNING</small><h1>See the shape.<br>Build the memory.</h1></div><div class="prog"><div class="prow"><b id="pLabel">Starting HSK 1</b><span id="pCount"></span></div><div class="bar"><i id="pBar"></i></div></div><div id="board" class="board" aria-label="Current lesson"></div><div id="lessonDots" class="lessonDeckDots" aria-hidden="true"></div><div class="foot"><button class="btn primary" id="continue">Continue learning</button></div></section>
+  <section id="progressScreen" class="screen page"><h1 class="title">Progress</h1><div class="stats"><div class="stat"><b id="mStat">0</b><span>mastered</span></div><div class="stat"><b id="lStat">0</b><span>learning</span></div><div class="stat"><b id="sStat">0</b><span>seen</span></div><div class="stat"><b id="pctStat">0%</b><span>HSK 1 mastery</span></div></div><div class="map"><b>HSK 1 path</b><div class="bar"><i id="mapBar"></i></div></div></section>
+  <section id="exploreScreen" class="screen page scroll"><h1 class="title">Explore</h1><input id="search" class="search" placeholder="Search character, pinyin or meaning"><div class="filters" aria-label="Character status legend and filters"><button class="chip on" data-filter="all">All</button><button class="chip" data-filter="new">Unseen</button><button class="chip" data-filter="learning">Learning</button><button class="chip" data-filter="mastered">Mastered</button><button class="chip" data-filter="struggle">Needs work</button></div><div id="wall" class="wall"></div></section>
+</div>
+<nav class="nav"><button class="on" data-screen="learn"><b>学</b>Learn</button><button data-screen="progress"><b>进</b>Progress</button><button data-screen="explore"><b>览</b>Explore</button></nav>
+<div id="focus" class="focus" aria-hidden="true"><div class="fTop"><button class="round" id="close" aria-label="Close">⌄</button><span id="count" class="count"></span><button class="round" id="fMenu" aria-label="Settings">•••</button></div><div id="pager" class="pager"></div></div>
+<div id="settingsSheet" class="sheet"><div class="sheetCard"><h2>Settings</h2><div class="setting"><b>Appearance</b><div class="seg"><button data-theme="system">System</button><button data-theme="light">Light</button><button data-theme="dark">Dark</button></div></div><div class="setting"><b>Audio</b><div class="seg"><button data-audio="on">On</button><button data-audio="off">Silent</button></div></div><div class="setting versionRow"><b>Version</b><span id="buildVersion">Hanzi 2.4.0</span></div><button class="btn" id="doneSettings">Done</button></div></div>
+<div id="strokePane" class="strokePane"><div class="strokeCard"><div class="strokeTop"><div><div id="strokeHz" class="sh"></div><b id="strokePy"></b></div><button id="closeStroke" aria-label="Close">×</button></div><h2>Practice stroke order</h2><div class="canvas"><div id="target" class="target"></div></div><div id="strokeStatus" class="strokeStatus"></div><div class="strokeActions"><button id="watch">▶ Watch</button><button id="retry">Start over</button></div></div></div>
+<script src="./preview-consolidated-state.js?v=2.4.0"></script>
+<script src="./preview-consolidated-app.js?v=2.4.0"></script>
+<script src="./consolidated-lesson-completion.js?v=2.4.0"></script>
+<script>document.addEventListener('DOMContentLoaded',()=>setTimeout(()=>{const v=document.getElementById('buildVersion');if(v)v.textContent='Hanzi 2.4.0'},0))</script>
+</body>
+</html>
