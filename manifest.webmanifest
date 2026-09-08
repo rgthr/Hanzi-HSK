@@ -1,0 +1,10 @@
+{
+  "name": "Hanzi",
+  "short_name": "Hanzi",
+  "start_url": "./",
+  "scope": "./",
+  "display": "standalone",
+  "background_color": "#f7f7f5",
+  "theme_color": "#191919",
+  "description": "Adaptive HSK 1 character learning"
+}
