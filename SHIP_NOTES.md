@@ -1,0 +1,1 @@
+Production promotion checkpoint. Legacy main before production promotion is commit ac2a4c2beb8bdb420823d6d2b416b2789bc704f3. Consolidated production target is the 2.4.0 preview behavior validated on iPhone.
