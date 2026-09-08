@@ -1,0 +1,11 @@
+(()=>{
+const BUILD='20260908.18';
+const css=document.createElement('style');css.textContent=`
+.sentenceMask{display:block;width:100%;margin-top:4px;padding:6px 0 2px;border:0;background:transparent;text-align:left;font:inherit;color:inherit;-webkit-tap-highlight-color:transparent;touch-action:manipulation}.sentenceMask .exPy,.sentenceMask .exEn{display:block}.sentenceMask.isHidden .exPy,.sentenceMask.isHidden .exEn{filter:blur(6px)!important;opacity:.34!important;user-select:none!important}.sentenceMask:not(.isHidden) .exPy,.sentenceMask:not(.isHidden) .exEn{filter:none!important;opacity:1!important}.sentenceMaskHint{display:block;margin-top:5px;font-size:10px;color:var(--muted);font-weight:650}.sentenceExample>.sentenceReveal{display:none!important}
+`;document.head.appendChild(css);
+function install(x){if(!x||x.dataset.maskV18)return;x.dataset.maskV18='1';const py=x.querySelector(':scope > .exPy'),en=x.querySelector(':scope > .exEn');if(!py||!en)return;const mask=document.createElement('button');mask.type='button';mask.className='sentenceMask isHidden';py.before(mask);mask.append(py,en);const hint=document.createElement('span');hint.className='sentenceMaskHint';hint.textContent='Tap to reveal pinyin + meaning';mask.appendChild(hint);mask.onclick=e=>{e.preventDefault();e.stopPropagation();const hidden=mask.classList.toggle('isHidden');hint.textContent=hidden?'Tap to reveal pinyin + meaning':'Tap to hide pinyin + meaning'};}
+function all(root=document){root.querySelectorAll?.('.sentenceExample').forEach(install)}
+new MutationObserver(ms=>ms.forEach(m=>m.addedNodes.forEach(n=>{if(n.nodeType===1){if(n.matches?.('.sentenceExample'))install(n);all(n)}}))).observe(document.body,{childList:true,subtree:true});
+document.addEventListener('click',e=>{const n=e.target.closest?.('[data-next-sentence]');if(!n)return;setTimeout(()=>{const x=n.closest('.fp')?.querySelector('.sentenceExample');if(!x)return;const mask=x.querySelector('.sentenceMask');if(mask){mask.classList.add('isHidden');const h=mask.querySelector('.sentenceMaskHint');if(h)h.textContent='Tap to reveal pinyin + meaning'}},0)},true);
+all();const vr=document.querySelector('#settingsSheet .versionRow b');if(vr)vr.textContent='v '+BUILD;window.__hanziBuild=BUILD;
+})();
