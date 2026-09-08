@@ -8,7 +8,18 @@
 <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
 <title>Hanzi · Consolidated Preview</title>
 <script src="https://cdn.jsdelivr.net/npm/hanzi-writer@3.7.3/dist/hanzi-writer.min.js"></script>
-<link rel="stylesheet" href="./preview-consolidated.css?v=2.3.0">
+<script>
+/* drawingWidth belongs on HanziWriter.create; force the intended thick brush for quiz + practice. */
+(()=>{const create=HanziWriter.create.bind(HanziWriter);HanziWriter.create=(el,ch,opts={})=>create(el,ch,{...opts,drawingWidth:32})})();
+</script>
+<link rel="stylesheet" href="./preview-consolidated.css?v=2.3.1">
+<style>
+.filters .chip[data-filter="new"]{border:2px solid transparent;background:linear-gradient(var(--paper),var(--paper)) padding-box,linear-gradient(135deg,#d9dee7,#eef1f5) border-box}
+.filters .chip[data-filter="learning"]{border:2px solid transparent;background:linear-gradient(var(--paper),var(--paper)) padding-box,linear-gradient(135deg,var(--blue1),var(--blue2),var(--blue3)) border-box}
+.filters .chip[data-filter="mastered"]{border:2px solid transparent;background:linear-gradient(var(--paper),var(--paper)) padding-box,linear-gradient(135deg,#15803d,#22c55e,#86efac) border-box}
+.filters .chip[data-filter="struggle"]{border:2px solid transparent;background:linear-gradient(var(--paper),var(--paper)) padding-box,linear-gradient(135deg,var(--pink1),var(--pink2),var(--pink3)) border-box}
+.filters .chip.on{box-shadow:inset 0 0 0 1px var(--ink);font-weight:750}
+</style>
 </head>
 <body>
 <div class="app">
@@ -24,13 +35,14 @@
     <div class="foot"><button class="btn primary" id="continue">Continue learning</button></div>
   </section>
   <section id="progressScreen" class="screen page"><h1 class="title">Progress</h1><div class="stats"><div class="stat"><b id="mStat">0</b><span>mastered</span></div><div class="stat"><b id="lStat">0</b><span>learning</span></div><div class="stat"><b id="sStat">0</b><span>seen</span></div><div class="stat"><b id="pctStat">0%</b><span>HSK 1 mastery</span></div></div><div class="map"><b>HSK 1 path</b><div class="bar"><i id="mapBar"></i></div></div></section>
-  <section id="exploreScreen" class="screen page scroll"><h1 class="title">Explore</h1><input id="search" class="search" placeholder="Search character, pinyin or meaning"><div class="filters"><button class="chip on" data-filter="all">All</button><button class="chip" data-filter="new">Unseen</button><button class="chip" data-filter="learning">Learning</button><button class="chip" data-filter="mastered">Mastered</button><button class="chip" data-filter="struggle">Needs work</button></div><div id="wall" class="wall"></div></section>
+  <section id="exploreScreen" class="screen page scroll"><h1 class="title">Explore</h1><input id="search" class="search" placeholder="Search character, pinyin or meaning"><div class="filters" aria-label="Character status legend and filters"><button class="chip on" data-filter="all">All</button><button class="chip" data-filter="new">Unseen</button><button class="chip" data-filter="learning">Learning</button><button class="chip" data-filter="mastered">Mastered</button><button class="chip" data-filter="struggle">Needs work</button></div><div id="wall" class="wall"></div></section>
 </div>
 <nav class="nav"><button class="on" data-screen="learn"><b>学</b>Learn</button><button data-screen="progress"><b>进</b>Progress</button><button data-screen="explore"><b>览</b>Explore</button></nav>
 <div id="focus" class="focus" aria-hidden="true"><div class="fTop"><button class="round" id="close" aria-label="Close">⌄</button><span id="count" class="count"></span><button class="round" id="fMenu" aria-label="Settings">•••</button></div><div id="pager" class="pager"></div></div>
 <div id="settingsSheet" class="sheet"><div class="sheetCard"><h2>Settings</h2><div class="setting"><b>Appearance</b><div class="seg"><button data-theme="system">System</button><button data-theme="light">Light</button><button data-theme="dark">Dark</button></div></div><div class="setting"><b>Audio</b><div class="seg"><button data-audio="on">On</button><button data-audio="off">Silent</button></div></div><div class="setting versionRow"><b>Version</b><span id="buildVersion">Consolidated</span></div><button class="btn" id="doneSettings">Done</button></div></div>
 <div id="strokePane" class="strokePane"><div class="strokeCard"><div class="strokeTop"><div><div id="strokeHz" class="sh"></div><b id="strokePy"></b></div><button id="closeStroke" aria-label="Close">×</button></div><h2>Practice stroke order</h2><div class="canvas"><div id="target" class="target"></div></div><div id="strokeStatus" class="strokeStatus"></div><div class="strokeActions"><button id="watch">▶ Watch</button><button id="retry">Start over</button></div></div></div>
-<script src="./preview-consolidated-state.js?v=2.3.0"></script>
-<script src="./preview-consolidated-app.js?v=2.3.0"></script>
+<script src="./preview-consolidated-state.js?v=2.3.1"></script>
+<script src="./preview-consolidated-app.js?v=2.3.1"></script>
+<script>document.addEventListener('DOMContentLoaded',()=>setTimeout(()=>{const v=document.getElementById('buildVersion');if(v)v.textContent='CONSOLIDATED 2.3.1'},0))</script>
 </body>
 </html>
