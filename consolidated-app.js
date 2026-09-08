@@ -1,224 +1,82 @@
 /* HANZI CONSOLIDATED CONTROLLER
-   Version: CONSOLIDATED 1.1.0 — AUDITED BASELINE
+   Version: CONSOLIDATED 2.0.0 — PARITY CLEAN SHELL
    Branch: clean-consolidation
-   Architecture: core.html is data/state/shell only; this file is the sole owner of
-   lesson paging, focus paging, quiz flow, writing practice and interaction state.
-   Legacy interaction handlers are physically discarded by cloning their DOM hosts.
+   Contract: feature parity with main, with one owner for board paging, focus swipes and writing.
+   No core.html, legacy handlers, interaction-v*, app-v*, lesson-ux-v* or quiz-practice-v*.
 */
 (()=>{
 'use strict';
-const VERSION='CONSOLIDATED 1.1.0';
+const VERSION='CONSOLIDATED 2.0.0';
 const LESSON_SIZE=12,PAGE_SIZE=6;
+const S=()=>window.HanziStore;
 const q=s=>document.querySelector(s),qa=s=>[...document.querySelectorAll(s)];
 const clamp=(n,a,b)=>Math.max(a,Math.min(b,n));
 const now=()=>performance.now();
-const chars=()=>{try{return typeof ALL!=='undefined'&&Array.isArray(ALL)?ALL:[]}catch{return[]}};
-const getChar=h=>{try{return typeof byH!=='undefined'&&byH?.[h]?byH[h]:chars().find(c=>c.h===h)}catch{return chars().find(c=>c.h===h)}};
 function unique(list){const out=[],seen=new Set();for(const c of list||[])if(c?.h&&!seen.has(c.h)){seen.add(c.h);out.push(c)}return out}
 function shuffled(list){const a=[...(list||[])];for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]]}return a}
-function getSkill(h){try{return state?.skills?.[h]||{}}catch{return{}}}
-function saveState(){try{if(typeof save==='function')save()}catch{}}
+function all(){return S().ALL||[]}
+function char(h){return S().byH?.[h]}
+function state(){return S().state}
 
-/* ---------- build marker ---------- */
-function markBuild(){
-  const brand=q('.brand');
-  if(brand&&!brand.querySelector('.consolidated-badge')){const b=document.createElement('span');b.className='consolidated-badge';b.textContent='Consolidated';brand.appendChild(b)}
-  const card=q('#settingsSheet .sheetCard');
-  if(card&&!card.querySelector('.consolidated-version')){const row=document.createElement('div');row.className='consolidated-version';row.innerHTML=`<b>Build</b><span>${VERSION}</span>`;card.insertBefore(row,q('#doneSettings'))}
-  window.__hanziBuild=VERSION;
-}
+/* ---------- parity content ---------- */
+const EX={
+'一':['我有一个朋友。','wǒ yǒu yí ge péngyou','I have a friend.'],'人':['这里人很多。','zhèlǐ rén hěn duō','There are many people here.'],'大':['北京很大。','Běijīng hěn dà','Beijing is very big.'],'小':['这个房间很小。','zhège fángjiān hěn xiǎo','This room is small.'],'我':['我是学生。','wǒ shì xuésheng','I am a student.'],'你':['你好吗？','nǐ hǎo ma','How are you?'],'好':['今天天气很好。','jīntiān tiānqì hěn hǎo','The weather is very nice today.'],'是':['他是老师。','tā shì lǎoshī','He is a teacher.'],'不':['我不喝咖啡。','wǒ bù hē kāfēi','I don’t drink coffee.'],'有':['我有一个问题。','wǒ yǒu yí ge wèntí','I have a question.'],'在':['我在家。','wǒ zài jiā','I am at home.'],'学':['我在学汉语。','wǒ zài xué Hànyǔ','I am learning Chinese.'],'吃':['我们去吃饭吧。','wǒmen qù chīfàn ba','Let’s go eat.'],'喝':['我想喝水。','wǒ xiǎng hē shuǐ','I want to drink water.'],'看':['我晚上看书。','wǒ wǎnshang kàn shū','I read in the evening.'],'说':['你会说汉语吗？','nǐ huì shuō Hànyǔ ma','Can you speak Chinese?'],'想':['我想去中国。','wǒ xiǎng qù Zhōngguó','I want to go to China.'],'去':['明天我去北京。','míngtiān wǒ qù Běijīng','Tomorrow I’m going to Beijing.'],'来':['你什么时候来？','nǐ shénme shíhou lái','When are you coming?'],'水':['请给我一杯水。','qǐng gěi wǒ yì bēi shuǐ','Please give me a glass of water.'],
+'呢':['你在做什么呢？','nǐ zài zuò shénme ne','What are you doing?'],'吗':['你喜欢喝茶吗？','nǐ xǐhuan hē chá ma','Do you like drinking tea?'],'吧':['我们走吧。','wǒmen zǒu ba','Let’s go.'],'得':['他说得很快。','tā shuō de hěn kuài','He speaks very quickly.'],'地':['他慢慢地走。','tā mànmàn de zǒu','He walks slowly.'],'过':['我去过北京。','wǒ qù guo Běijīng','I have been to Beijing.'],'着':['门开着。','mén kāi zhe','The door is open.'],'给':['请给我一杯水。','qǐng gěi wǒ yì bēi shuǐ','Please give me a glass of water.'],'从':['我从巴黎来。','wǒ cóng Bālí lái','I come from Paris.'],'到':['我八点到公司。','wǒ bā diǎn dào gōngsī','I get to the office at eight.'],'对':['你说得对。','nǐ shuō de duì','You are right.'],'比':['他比我高。','tā bǐ wǒ gāo','He is taller than me.'],'还':['我还没吃饭。','wǒ hái méi chīfàn','I haven’t eaten yet.'],'又':['他又来了。','tā yòu lái le','He came again.'],'最':['这个最好。','zhège zuì hǎo','This one is the best.']
+};
+const MEM={'好':'女 + 子. Use the two clear halves as the hook: woman + child → “good”. This is a mnemonic, not a literal modern definition.','休':'亻 + 木: picture a person leaning against a tree to rest.','明':'日 + 月: sun + moon → two bright things → “bright”.','看':'手 above 目: picture shading your eyes with your hand to look.','问':'门 around 口: a mouth at the door asking a question.','妈':'女 gives the meaning family; 马 mainly gives the sound clue.','吗':'口 signals speech/question; 马 supplies the sound.','想':'相 above 心. 心 is the strong memory anchor: thinking happens in the mind.','家':'宀 is the roof/home clue. The lower part is historically 豕 (pig), a useful visual fact but not a modern definition.','人':'Originally a pictograph of a standing person seen from the side.','山':'An ancient pictograph of mountain peaks; the silhouette is still visible.','口':'A pictograph of an open mouth; it often appears in speaking/mouth-related characters.','日':'Originally a drawing of the sun. It also means “day” and appears in time-related characters.','月':'Originally a moon pictograph. As a component it can also represent 肉 “flesh”, so context matters.','木':'A tree pictograph: trunk, branches and roots. It recurs widely in plant/wood characters.','女':'An ancient pictograph of a kneeling woman. Use the modern shape as the visual anchor.','子':'An ancient pictograph of a child; it appears as both a word and a component.'};
+function memory(c){if(MEM[c.h])return MEM[c.h];if(c.component_note&&!c.component_note.includes('Start with the whole silhouette'))return c.component_note;if(c.keyContext)return c.keyContext;return c.context&&c.context!==c.h?c.context:`Remember the silhouette first: ${c.h}.`}
+const generic=c=>[[`我在学“${c.h}”这个字。`,`wǒ zài xué “${c.p}” zhège zì.`,`I’m learning the character ${c.h}.`],[`你认识“${c.h}”这个字吗？`,`nǐ rènshi “${c.p}” zhège zì ma?`,`Do you recognize the character ${c.h}?`],[`老师写了“${c.h}”这个字。`,`lǎoshī xiě le “${c.p}” zhège zì.`,`The teacher wrote the character ${c.h}.`]];
+function examples(c){const a=[];if(EX[c.h])a.push(EX[c.h]);if(c.context&&c.context!==c.h&&c.context.includes(c.h))a.push([c.context,c.contextPinyin||'',c.contextMeaning||'']);a.push(...generic(c));const out=[],seen=new Set();for(const x of a){if(!x?.[0]||seen.has(x[0]))continue;seen.add(x[0]);out.push(x);if(out.length===3)break}return out}
+function related(c){const raw=c.relatedShapes||c.related||c.family||c.similar||[],out=[];for(const r of Array.isArray(raw)?raw:[]){const x=typeof r==='string'?char(r):r;if(x?.h&&x.h!==c.h&&!out.some(y=>y.h===x.h))out.push(x)}return out.slice(0,5)}
 
-/* ---------- data/state ---------- */
-function markExposure(c,fields=[],ok=true){
-  if(!c)return;
-  try{
-    state.seen[c.h]=1;
-    const s=typeof sk==='function'?sk(c.h):(state.skills[c.h]||(state.skills[c.h]={}));
-    s.exposures=(s.exposures||0)+1;s.last=Date.now();
-    if(ok){for(const f of fields)s[f]=Math.min(5,(s[f]||0)+1)}else{s.mistakes=(s.mistakes||0)+1}
-    if(typeof mastery==='function')mastery(c);saveState();refreshProgressOnly();
-  }catch{}
-}
-function lessonChars(){
-  const all=chars();if(!all.length)return[];
-  for(let i=0;i<all.length;i+=LESSON_SIZE){const block=all.slice(i,i+LESSON_SIZE);if(!block.every(c=>state?.mastered?.[c.h]))return block}
-  return all.slice(Math.max(0,all.length-LESSON_SIZE));
-}
-function tileState(c){const s=getSkill(c.h);if(state?.mastered?.[c.h])return'MASTERED';if(state?.seen?.[c.h])return(s.mistakes||0)>1?'REVIEW':'LEARNING';return'NEW'}
-
-/* ---------- content ---------- */
-const genericExamples=c=>[
- [`我在学“${c.h}”这个字。`,`wǒ zài xué “${c.p}” zhège zì.`,`I’m learning the character ${c.h}.`],
- [`你认识“${c.h}”这个字吗？`,`nǐ rènshi “${c.p}” zhège zì ma?`,`Do you recognize the character ${c.h}?`],
- [`老师写了“${c.h}”这个字。`,`lǎoshī xiě le “${c.p}” zhège zì.`,`The teacher wrote the character ${c.h}.`]
-];
-function threeExamples(c){
-  const candidates=[];
-  try{if(typeof examples==='function')candidates.push(...(examples(c)||[]))}catch{}
-  try{if(typeof example==='function'){const ex=example(c);if(ex?.[0])candidates.push(ex)}}catch{}
-  if(c.context&&c.context!==c.h&&c.context.includes(c.h))candidates.push([c.context,c.contextPinyin||'',c.contextMeaning||'']);
-  candidates.push(...genericExamples(c));
-  const out=[],seen=new Set();for(const ex of candidates){if(!ex?.[0]||seen.has(ex[0]))continue;seen.add(ex[0]);out.push(ex);if(out.length===3)break}return out;
-}
-function related(c){
-  const raw=c.relatedShapes||c.related||c.family||c.similar||[],out=[];
-  for(const r of Array.isArray(raw)?raw:[]){const x=typeof r==='string'?getChar(r):r;if(x?.h&&x.h!==c.h&&!out.some(y=>y.h===x.h))out.push(x)}
-  return out.slice(0,5);
-}
-
-/* ---------- legacy-listener isolation ---------- */
-function replaceHost(selector,deep=true){const old=q(selector);if(!old)return null;const fresh=old.cloneNode(deep);old.replaceWith(fresh);return fresh}
-function isolateLegacyInteractions(){
-  /* core.html attaches touch listeners with addEventListener. Assigning ontouch*=null
-     cannot remove them. Replacing these two hosts guarantees those listeners are gone. */
-  replaceHost('#board',false);
-  replaceHost('#focus',true);
-}
-
-/* ---------- lesson board ---------- */
+/* ---------- lesson + progress ---------- */
+function lessonChars(){const a=all();if(!a.length)return[];for(let i=0;i<a.length;i+=LESSON_SIZE){const block=a.slice(i,i+LESSON_SIZE);if(!block.every(c=>state().mastered?.[c.h]))return block}return a.slice(Math.max(0,a.length-LESSON_SIZE))}
+function tileState(c){const sk=S().skill(c.h);if(state().mastered?.[c.h])return'MASTERED';if(state().seen?.[c.h])return(sk.mistakes||0)>1?'REVIEW':'LEARNING';return'NEW'}
+function progress(){const a=all(),m=a.filter(c=>state().mastered?.[c.h]).length,se=a.filter(c=>state().seen?.[c.h]).length,l=a.filter(c=>state().seen?.[c.h]&&!state().mastered?.[c.h]).length,p=a.length?Math.round(m/a.length*100):0;q('#pCount').textContent=`${m} / ${a.length} mastered`;q('#pBar').style.width=p+'%';q('#mStat').textContent=m;q('#lStat').textContent=l;q('#sStat').textContent=se;q('#pctStat').textContent=p+'%';q('#mapBar').style.width=p+'%';refreshTileStates();if(q('#exploreScreen').classList.contains('on'))renderExplore()}
 let lessonPage=0,boardGesture=null,boardSuppressUntil=0;
-function lessonPages(){const a=lessonChars();return[a.slice(0,PAGE_SIZE),a.slice(PAGE_SIZE,LESSON_SIZE)].filter(x=>x.length)}
-function makeTile(c,set,index){
-  const b=document.createElement('button');b.className='tile';b.dataset.h=c.h;
-  const tag=tileState(c);b.classList.toggle('review',tag==='REVIEW');
-  b.innerHTML=`<span class="tag">${tag}</span><span class="hz">${c.h}</span>${state?.seen?.[c.h]?'<i class="dot"></i>':''}`;
-  b.onclick=e=>{e.preventDefault();e.stopPropagation();if(now()<boardSuppressUntil)return;openFocusConsolidated(set,index)};
-  return b;
-}
-function renderLessonBoard(page=lessonPage){
-  const board=q('#board'),pages=lessonPages();if(!board||!pages.length)return;
-  lessonPage=clamp(page,0,pages.length-1);board.className='board consolidated-board';board.dataset.lessonPage=String(lessonPage);
-  board.replaceChildren(...pages[lessonPage].map((c,i)=>makeTile(c,pages[lessonPage],i)));
-  let dots=board.parentElement.querySelector('.lessonDeckDots');if(!dots){dots=document.createElement('div');dots.className='lessonDeckDots';board.insertAdjacentElement('afterend',dots)}
-  dots.innerHTML=pages.map((_,i)=>`<i class="${i===lessonPage?'on':''}"></i>`).join('');
-}
-function installBoardGestures(){
-  const board=q('#board');if(!board)return;
-  board.addEventListener('click',e=>{if(now()<boardSuppressUntil){e.preventDefault();e.stopImmediatePropagation()}},true);
-  board.onpointerdown=e=>{if(e.button!=null&&e.button!==0)return;boardGesture={id:e.pointerId,x:e.clientX,y:e.clientY,axis:null,drag:false}};
-  board.onpointermove=e=>{const g=boardGesture;if(!g||g.id!==e.pointerId)return;const dx=e.clientX-g.x,dy=e.clientY-g.y,ax=Math.abs(dx),ay=Math.abs(dy);if(!g.axis){if(ax<8&&ay<8)return;if(ax>ay*1.18){g.axis='x';try{board.setPointerCapture(e.pointerId)}catch{}}else{g.axis='y';return}}if(g.axis!=='x')return;g.drag=true;e.preventDefault()};
-  board.onpointerup=e=>{const g=boardGesture;boardGesture=null;if(!g||g.id!==e.pointerId||!g.drag)return;const dx=e.clientX-g.x,pages=lessonPages();boardSuppressUntil=now()+380;if(dx<-48&&lessonPage<pages.length-1)renderLessonBoard(lessonPage+1);else if(dx>48&&lessonPage>0)renderLessonBoard(lessonPage-1);e.preventDefault()};
-  board.onpointercancel=()=>{boardGesture=null};
-}
-function refreshLessonLabels(){
-  const board=q('#board.consolidated-board');if(!board)return;
-  board.querySelectorAll('.tile[data-h]').forEach(b=>{const c=getChar(b.dataset.h);if(!c)return;const tag=tileState(c);b.querySelector('.tag').textContent=tag;b.classList.toggle('review',tag==='REVIEW');let d=b.querySelector('.dot');if(state?.seen?.[c.h]&&!d){d=document.createElement('i');d.className='dot';b.appendChild(d)}else if(!state?.seen?.[c.h]&&d)d.remove()});
-}
-function continueLearning(){
-  const lesson=lessonChars(),unseen=lesson.filter(c=>!state?.seen?.[c.h]),learning=lesson.filter(c=>state?.seen?.[c.h]&&!state?.mastered?.[c.h]),mastered=lesson.filter(c=>state?.mastered?.[c.h]),pick=[];
-  for(const c of unseen.slice(0,3))if(!pick.some(x=>x.h===c.h))pick.push(c);
-  for(const c of [...learning,...unseen.slice(3),...mastered])if(pick.length<PAGE_SIZE&&!pick.some(x=>x.h===c.h))pick.push(c);
-  if(pick.length)openFocusConsolidated(pick,0);
-}
+function pages(){const x=lessonChars();return[x.slice(0,6),x.slice(6,12)].filter(Boolean).filter(x=>x.length)}
+function makeTile(c,set,i){const b=document.createElement('button');b.className='tile';b.dataset.h=c.h;const tag=tileState(c);b.classList.toggle('review',tag==='REVIEW');b.innerHTML=`<span class="tag">${tag}</span><span class="hz">${c.h}</span>${state().seen?.[c.h]?'<i class="dot"></i>':''}`;b.onclick=e=>{e.preventDefault();e.stopPropagation();if(now()<boardSuppressUntil)return;openFocus(set,i)};return b}
+function renderBoard(page=lessonPage){const p=pages();if(!p.length)return;lessonPage=clamp(page,0,p.length-1);q('#board').replaceChildren(...p[lessonPage].map((c,i)=>makeTile(c,p[lessonPage],i)));q('#lessonDots').innerHTML=p.map((_,i)=>`<i class="${i===lessonPage?'on':''}"></i>`).join('')}
+function refreshTileStates(){qa('#board .tile').forEach(b=>{const c=char(b.dataset.h);if(!c)return;const tag=tileState(c);b.querySelector('.tag').textContent=tag;b.classList.toggle('review',tag==='REVIEW');let d=b.querySelector('.dot');if(state().seen?.[c.h]&&!d){d=document.createElement('i');d.className='dot';b.appendChild(d)}else if(!state().seen?.[c.h]&&d)d.remove()})}
+function installBoardSwipe(){const board=q('#board');board.addEventListener('click',e=>{if(now()<boardSuppressUntil){e.preventDefault();e.stopImmediatePropagation()}},true);board.onpointerdown=e=>{if(e.button!=null&&e.button!==0)return;boardGesture={id:e.pointerId,x:e.clientX,y:e.clientY,axis:null,drag:false}};board.onpointermove=e=>{const g=boardGesture;if(!g||g.id!==e.pointerId)return;const dx=e.clientX-g.x,dy=e.clientY-g.y,ax=Math.abs(dx),ay=Math.abs(dy);if(!g.axis){if(ax<10&&ay<10)return;if(ax>ay*1.2){g.axis='x';try{board.setPointerCapture(e.pointerId)}catch{}}else{g.axis='y';return}}if(g.axis==='x'){g.drag=true;e.preventDefault()}};board.onpointerup=e=>{const g=boardGesture;boardGesture=null;if(!g||g.id!==e.pointerId||!g.drag)return;boardSuppressUntil=now()+350;const dx=e.clientX-g.x;if(dx<-55&&lessonPage<pages().length-1)renderBoard(lessonPage+1);else if(dx>55&&lessonPage>0)renderBoard(lessonPage-1);e.preventDefault()};board.onpointercancel=()=>boardGesture=null}
+function continueLearning(){const lesson=lessonChars(),unseen=lesson.filter(c=>!state().seen?.[c.h]),learning=lesson.filter(c=>state().seen?.[c.h]&&!state().mastered?.[c.h]),mastered=lesson.filter(c=>state().mastered?.[c.h]),pick=[];for(const c of unseen.slice(0,3))if(!pick.some(x=>x.h===c.h))pick.push(c);for(const c of [...learning,...unseen.slice(3),...mastered])if(pick.length<6&&!pick.some(x=>x.h===c.h))pick.push(c);if(pick.length)openFocus(pick.slice(0,6),0)}
 
-/* ---------- focus cards ---------- */
-let focusSet=[],focusSlides=[],focusActive=0,focusLearnCount=0,focusGesture=null,focusSuppressUntil=0,focusTimer=null;
-function learnSlide(c){
-  const slide=document.createElement('div');slide.className='fp';slide.dataset.h=c.h;const ex=threeExamples(c),rel=related(c),memory=(c.keyContext||c.memory||c.context||'').trim();
-  slide.innerHTML=`<div class="card"><div class="cHead"></div><div class="heroChar"><div class="big">${c.h}</div><div class="mainRecall hidden"><div class="py">${c.p||''}</div><div class="meaning">${c.contextMeaning||''}</div></div><button class="audio" data-audio>◖</button></div><div class="learnBody"><div class="section"><div class="lab">KEY CONTEXT</div><div class="memory">${memory||`Recognize ${c.h} as ${c.contextMeaning||'this character'}.`}</div></div><div class="section"><div class="lab">IN A SENTENCE</div><div class="sentenceExample hidden" data-sentence="0"><div class="exCn">${ex[0]?.[0]||''}</div><div class="exPy">${ex[0]?.[1]||''}</div><div class="exEn">${ex[0]?.[2]||''}</div></div><div class="sentenceTools"><button data-next-sentence>${ex.length>1?'1 / 3 · next':'1 / 1'}</button></div></div><div class="section"><div class="lab">RELATED SHAPES</div>${rel.length?`<div class="relatedList">${rel.map(r=>`<button data-related="${r.h}"><span class="rh">${r.h}</span><span class="rp">${r.p||''}</span><span class="rm">${r.contextMeaning||''}</span></button>`).join('')}</div>`:'<div class="none">No related shapes in the current dataset.</div>'}</div><button class="stroke" data-practice>✍️ Practice stroke order</button></div></div>`;
-  const recall=slide.querySelector('.mainRecall');recall.onclick=e=>{e.preventDefault();e.stopPropagation();recall.classList.toggle('hidden')};
-  const sentence=slide.querySelector('.sentenceExample');sentence.onclick=e=>{e.preventDefault();e.stopPropagation();sentence.classList.toggle('hidden')};
-  const next=slide.querySelector('[data-next-sentence]');next.onclick=e=>{e.preventDefault();e.stopPropagation();let i=(Number(sentence.dataset.sentence)||0)+1;i%=Math.max(1,ex.length);sentence.dataset.sentence=i;sentence.querySelector('.exCn').textContent=ex[i]?.[0]||'';sentence.querySelector('.exPy').textContent=ex[i]?.[1]||'';sentence.querySelector('.exEn').textContent=ex[i]?.[2]||'';sentence.classList.add('hidden');next.textContent=`${i+1} / ${ex.length} · next`};
-  slide.querySelector('[data-audio]').onclick=e=>{e.preventDefault();e.stopPropagation();try{if(typeof speak==='function')speak(c)}catch{}};
-  slide.querySelector('[data-practice]').onclick=e=>{e.preventDefault();e.stopPropagation();openPractice(c)};
-  slide.querySelectorAll('[data-related]').forEach(b=>b.onclick=e=>{e.preventDefault();e.stopPropagation();const r=getChar(b.dataset.related);if(r)openFocusConsolidated([r],0)});
-  return slide;
-}
-function distractors(c,n=3){return shuffled(chars().filter(x=>x.h!==c.h&&x.contextMeaning!==c.contextMeaning)).slice(0,n)}
-function recallQuiz(c,type,n){
-  const slide=document.createElement('div');slide.className='fp quizSlide';const opts=shuffled([c,...distractors(c)]);let prompt,hero,render,fields;
-  if(type==='meaning'){prompt='What does this character mean?';hero=c.h;render=x=>x.contextMeaning;fields=['recognition','meaning']}
-  else if(type==='pinyin'){prompt='Which pinyin matches this character?';hero=c.h;render=x=>x.p;fields=['recognition','sound']}
-  else{prompt='Which character means this?';hero=c.contextMeaning;render=x=>x.h;fields=['recognition','meaning']}
-  slide.innerHTML=`<div class="card"><div class="quizTop">TEST · ${n}/6</div><div class="quizBody"><div class="quizPrompt">${prompt}</div><div class="quizHero ${type==='hanzi'?'word':'char'}">${hero||''}</div><div class="quizChoices">${opts.map(x=>`<button class="quizChoice ${type==='hanzi'?'charChoice':''}" data-h="${x.h}">${render(x)||''}</button>`).join('')}</div><div class="quizFeedback"><div class="feedbackChar">${c.h}</div><div class="feedbackText"><b>${c.p||''}</b><span>${c.contextMeaning||''}</span></div></div><div class="quizHint">Choose an answer</div></div></div>`;
-  slide.querySelectorAll('.quizChoice').forEach(b=>b.onclick=e=>{e.preventDefault();e.stopPropagation();if(slide.dataset.answered)return;slide.dataset.answered='1';const ok=b.dataset.h===c.h;slide.querySelectorAll('.quizChoice').forEach(x=>{if(x.dataset.h===c.h)x.classList.add('correct');else if(x===b)x.classList.add('wrong');else x.classList.add('dim')});slide.querySelector('.quizFeedback')?.classList.add('on');slide.querySelector('.quizHint').textContent='Swipe to continue';markExposure(c,fields,ok)});
-  return slide;
-}
-function connectSet(set){
-  const current=unique(set),ids=new Set(current.map(c=>c.h));
-  const recent=chars().filter(c=>state?.seen?.[c.h]&&!ids.has(c.h)).sort((a,b)=>(getSkill(b.h).last||0)-(getSkill(a.h).last||0));
-  const out=[];for(const c of [...shuffled(recent.slice(0,18)).slice(0,3),...shuffled(current),...recent,...chars()])if(out.length<6&&!out.some(x=>x.h===c.h))out.push(c);
-  return out.slice(0,6);
-}
-function connectQuiz(set){
-  const chosen=connectSet(set),slide=document.createElement('div');slide.className='fp quizSlide connectSlide';const hz=shuffled(chosen),py=shuffled(chosen),en=shuffled(chosen);
-  slide.innerHTML=`<div class="card"><div class="quizTop">TEST · 5/6</div><div class="quizBody"><div class="connectTitle">Connect the three</div><div class="connectSub">Match each Hanzi, pinyin and meaning.</div><div class="connectGrid"><div class="connectCol"><div class="connectLabel">Hanzi</div>${hz.map(c=>`<button class="matchItem hanzi" data-k="h" data-h="${c.h}">${c.h}</button>`).join('')}</div><div class="connectCol"><div class="connectLabel">Pinyin</div>${py.map(c=>`<button class="matchItem pinyin" data-k="p" data-h="${c.h}">${c.p||''}</button>`).join('')}</div><div class="connectCol"><div class="connectLabel">Meaning</div>${en.map(c=>`<button class="matchItem" data-k="m" data-h="${c.h}">${c.contextMeaning||''}</button>`).join('')}</div></div><div class="connectStatus">Tap one item in each column</div></div></div>`;
-  let sel={};slide.onclick=e=>{const b=e.target.closest('.matchItem');if(!b||b.classList.contains('matched'))return;e.preventDefault();e.stopPropagation();slide.querySelectorAll(`.matchItem[data-k="${b.dataset.k}"]`).forEach(x=>x.classList.remove('selected'));b.classList.add('selected');sel[b.dataset.k]=b;if(!(sel.h&&sel.p&&sel.m))return;const trio=[sel.h,sel.p,sel.m],ok=trio.every(x=>x.dataset.h===trio[0].dataset.h),status=slide.querySelector('.connectStatus');if(ok){trio.forEach(x=>{x.classList.remove('selected');x.classList.add('matched')});markExposure(getChar(trio[0].dataset.h),['recognition','sound','meaning'],true);sel={};status.textContent=slide.querySelector('.matchItem:not(.matched)')?'Correct — keep going':'All 6 connected ✓ · swipe to continue'}else{trio.forEach(x=>x.classList.remove('selected'));sel={};status.textContent='Not quite — try again'}};
-  return slide;
-}
+/* ---------- focus learning cards ---------- */
+let focusSet=[],slides=[],active=0,learnCount=0,gesture=null,suppressUntil=0,settleTimer=null;
+function learnSlide(c){const ex=examples(c),rel=related(c),s=document.createElement('div');s.className='fp';s.dataset.h=c.h;s.innerHTML=`<div class="card"><div class="cHead">HSK 1 · ${c.index||''}/${all().length}</div><div class="heroChar"><div class="big">${c.h}</div><div class="mainRecall hidden"><div class="py">${c.p||''}</div><div class="meaning">${c.contextMeaning||''}</div></div><button class="audio" data-audio>◖</button></div><div class="learnBody"><div class="section"><div class="lab">KEY CONTEXT</div><div class="memory">${memory(c)}</div></div><div class="section"><div class="lab">IN A SENTENCE</div><div class="sentenceExample hidden" data-i="0"><div class="exCn">${ex[0][0]}</div><div class="exPy">${ex[0][1]}</div><div class="exEn">${ex[0][2]}</div></div><div class="sentenceTools"><button data-next>1 / 3 · next</button></div></div><div class="section"><div class="lab">RELATED SHAPES</div>${rel.length?`<div class="relatedList">${rel.map(r=>`<button data-related="${r.h}"><span class="rh">${r.h}</span><span class="rp">${r.p||''}</span><span class="rm">${r.contextMeaning||''}</span></button>`).join('')}</div>`:'<div class="none">Related forms will appear when available.</div>'}</div><button class="stroke" data-practice>✍️ Practice stroke order</button></div></div>`;
+const recall=s.querySelector('.mainRecall');recall.onclick=e=>{e.preventDefault();e.stopPropagation();recall.classList.toggle('hidden')};const sent=s.querySelector('.sentenceExample');sent.onclick=e=>{e.preventDefault();e.stopPropagation();sent.classList.toggle('hidden')};s.querySelector('[data-next]').onclick=e=>{e.preventDefault();e.stopPropagation();let i=(+sent.dataset.i+1)%3;sent.dataset.i=i;sent.querySelector('.exCn').textContent=ex[i][0];sent.querySelector('.exPy').textContent=ex[i][1];sent.querySelector('.exEn').textContent=ex[i][2];sent.classList.add('hidden');e.currentTarget.textContent=`${i+1} / 3 · next`};s.querySelector('[data-audio]').onclick=e=>{e.preventDefault();e.stopPropagation();S().speak(c)};s.querySelector('[data-practice]').onclick=e=>{e.preventDefault();e.stopPropagation();openPractice(c)};s.querySelectorAll('[data-related]').forEach(b=>b.onclick=e=>{e.preventDefault();e.stopPropagation();const r=char(b.dataset.related);if(r)openFocus([r],0)});return s}
+function distractors(c,n=3){return shuffled(all().filter(x=>x.h!==c.h&&x.contextMeaning!==c.contextMeaning)).slice(0,n)}
+function recallQuiz(c,type,n){const s=document.createElement('div');s.className='fp';const opts=shuffled([c,...distractors(c)]);let prompt,hero,render,fields,heroClass='char';if(type==='meaning'){prompt='What does this character mean?';hero=c.h;render=x=>x.contextMeaning;fields=['recognition','meaning']}else if(type==='pinyin'){prompt='Which pinyin matches this character?';hero=c.h;render=x=>x.p;fields=['recognition','sound']}else{prompt='Which character means this?';hero=c.contextMeaning;render=x=>x.h;fields=['recognition','meaning'];heroClass='word'}s.innerHTML=`<div class="card"><div class="quizTop">TEST · ${n}/6</div><div class="quizBody"><div class="quizPrompt">${prompt}</div><div class="quizHero ${heroClass}">${hero||''}</div><div class="quizChoices">${opts.map(x=>`<button class="quizChoice ${type==='hanzi'?'charChoice':''}" data-h="${x.h}">${render(x)||''}</button>`).join('')}</div><div class="quizFeedback"><div class="feedbackChar">${c.h}</div><div class="feedbackText"><b>${c.p||''}</b><span>${c.contextMeaning||''}</span></div></div><div class="quizHint">Choose an answer</div></div></div>`;s.querySelectorAll('.quizChoice').forEach(b=>b.onclick=e=>{e.preventDefault();e.stopPropagation();if(s.dataset.answered)return;s.dataset.answered='1';const ok=b.dataset.h===c.h;s.querySelectorAll('.quizChoice').forEach(x=>{if(x.dataset.h===c.h)x.classList.add('correct');else if(x===b)x.classList.add('wrong');else x.classList.add('dim')});s.querySelector('.quizFeedback').classList.add('on');s.querySelector('.quizHint').textContent='Swipe to continue';S().mark(c,fields,ok)});return s}
+function connectSet(set){const cur=unique(set),ids=new Set(cur.map(c=>c.h)),recent=all().filter(c=>state().seen?.[c.h]&&!ids.has(c.h)).sort((a,b)=>(S().skill(b.h).last||0)-(S().skill(a.h).last||0)),out=[];for(const c of [...shuffled(recent.slice(0,18)).slice(0,3),...shuffled(cur),...recent,...all()])if(out.length<6&&!out.some(x=>x.h===c.h))out.push(c);return out.slice(0,6)}
+function connectQuiz(set){const chosen=connectSet(set),s=document.createElement('div');s.className='fp';const hz=shuffled(chosen),py=shuffled(chosen),en=shuffled(chosen);s.innerHTML=`<div class="card"><div class="quizTop">TEST · 5/6</div><div class="quizBody"><div class="connectTitle">Connect the three</div><div class="connectSub">Match 6 Hanzi — recent + earlier characters.</div><div class="connectGrid"><div class="connectCol"><div class="connectLabel">Hanzi</div>${hz.map(c=>`<button class="matchItem hanzi" data-k="h" data-h="${c.h}">${c.h}</button>`).join('')}</div><div class="connectCol"><div class="connectLabel">Pinyin</div>${py.map(c=>`<button class="matchItem pinyin" data-k="p" data-h="${c.h}">${c.p||''}</button>`).join('')}</div><div class="connectCol"><div class="connectLabel">Meaning</div>${en.map(c=>`<button class="matchItem" data-k="m" data-h="${c.h}">${c.contextMeaning||''}</button>`).join('')}</div></div><div class="connectStatus">Tap one item in each column</div></div></div>`;let sel={};s.onclick=e=>{const b=e.target.closest('.matchItem');if(!b||b.classList.contains('matched'))return;e.preventDefault();e.stopPropagation();s.querySelectorAll(`.matchItem[data-k="${b.dataset.k}"]`).forEach(x=>x.classList.remove('selected'));b.classList.add('selected');sel[b.dataset.k]=b;if(!(sel.h&&sel.p&&sel.m))return;const trio=[sel.h,sel.p,sel.m],ok=trio.every(x=>x.dataset.h===trio[0].dataset.h),status=s.querySelector('.connectStatus');if(ok){trio.forEach(x=>{x.classList.remove('selected');x.classList.add('matched')});S().mark(char(trio[0].dataset.h),['recognition','sound','meaning'],true);sel={};status.textContent=s.querySelector('.matchItem:not(.matched)')?'Correct — keep going':'All 6 connected ✓ · swipe to continue'}else{trio.forEach(x=>{x.classList.add('wrong');setTimeout(()=>x.classList.remove('wrong','selected'),170)});sel={};status.textContent='Not quite — try again'}};return s}
 
-/* ---------- one shared writing engine ---------- */
-let practiceCharacter=null,practiceWriter=null;
-function createWriter(target,status,c,{drawingWidth=28}={}){
-  if(!target||!status||!c)return null;if(typeof HanziWriter==='undefined'){status.textContent='Stroke data unavailable.';return null}
-  target.innerHTML='';const box=target.parentElement,z=Math.max(240,Math.floor(box.clientWidth||300));
-  const writer=HanziWriter.create(target,c.h,{width:z,height:z,padding:24,showOutline:true,showCharacter:false,drawingWidth,drawingFadeDuration:800,strokeAnimationSpeed:5,strokeHighlightSpeed:5,delayBetweenStrokes:0});
-  status.textContent='Start with the first stroke.';
-  /* Hanzi Writer already advances its internal expected-stroke index after a correct
-     stroke. Do not call animateStroke here: that extra animation can intercept the
-     next gesture and was the source of the apparent “tap to move forward” state. */
-  writer.quiz({showHintAfterMisses:1,highlightOnComplete:true,onCorrectStroke:d=>{status.textContent=d.strokesRemaining?`${d.strokesRemaining} stroke${d.strokesRemaining===1?'':'s'} left`:'Finishing…'},onComplete:()=>{status.textContent='Character complete ✓';try{if(typeof bump==='function')bump(c,'writing',true);else markExposure(c,['writing'],true)}catch{}}});
-  return writer;
-}
-function protectWriterSurface(surface){for(const type of ['pointerdown','pointermove','pointerup','pointercancel','touchstart','touchmove','touchend','touchcancel'])surface.addEventListener(type,e=>e.stopPropagation(),{passive:true})}
-function writingQuiz(c){
-  const slide=document.createElement('div');slide.className='fp quizSlide writeSlide';slide.innerHTML=`<div class="card"><div class="quizTop">TEST · 6/6</div><div class="quizBody"><div class="writePrompt">Write <b>${c.h}</b> in stroke order · ${c.p||''} · ${c.contextMeaning||''}</div><div class="writeSurface"><div class="writeTarget"></div></div><div class="writeStatus">Preparing stroke practice…</div><button class="finishQuiz">Finish quiz</button></div></div>`;
-  const surface=slide.querySelector('.writeSurface');protectWriterSurface(surface);slide._startWriter=()=>createWriter(slide.querySelector('.writeTarget'),slide.querySelector('.writeStatus'),c,{drawingWidth:28});
-  slide.querySelector('.finishQuiz').onclick=e=>{e.preventDefault();e.stopPropagation();closeFocusConsolidated();renderLessonBoard(lessonPage)};return slide;
-}
-function openPractice(c){
-  const pane=q('#strokePane'),target=q('#target'),status=q('#strokeStatus');if(!pane||!target||!status)return;practiceCharacter=c;pane.classList.add('on');q('#strokeHz').textContent=c.h;q('#strokePy').textContent=`${c.p||''} · ${c.contextMeaning||''}`;practiceWriter=createWriter(target,status,c,{drawingWidth:28});
-}
-function retryPractice(){if(practiceCharacter)practiceWriter=createWriter(q('#target'),q('#strokeStatus'),practiceCharacter,{drawingWidth:28})}
-function watchPractice(){
-  if(!practiceCharacter||typeof HanziWriter==='undefined')return;const target=q('#target'),box=target?.parentElement,status=q('#strokeStatus');if(!target||!box||!status)return;target.innerHTML='';const z=Math.max(240,Math.floor(box.clientWidth||300));practiceWriter=HanziWriter.create(target,practiceCharacter.h,{width:z,height:z,padding:24,showOutline:true,showCharacter:true});status.textContent='Watching…';practiceWriter.animateCharacter({onComplete:()=>status.textContent='Tap Start over to practice.'});
-}
+/* ---------- one shared Hanzi Writer path ---------- */
+function createWriter(target,status,c,{drawingWidth=26,outline=true,onComplete}={}){target.innerHTML='';if(typeof HanziWriter==='undefined'){status.textContent='Stroke data unavailable.';return null}const box=target.parentElement,z=Math.max(240,Math.floor(box.getBoundingClientRect().width||300));status.textContent='Loading stroke practice…';let writer=HanziWriter.create(target,c.h,{width:z,height:z,padding:24,showOutline:outline,showCharacter:false,drawingWidth,renderer:'canvas',onLoadCharDataSuccess:()=>status.textContent='Start with the first stroke.',onLoadCharDataError:()=>status.textContent='Could not load stroke data.'});writer.quiz({showHintAfterMisses:1,highlightOnComplete:true,leniency:1.15,onCorrectStroke:d=>{status.textContent=d.strokesRemaining?`${d.strokesRemaining} stroke${d.strokesRemaining===1?'':'s'} left`:'Finishing…'},onMistake:()=>{status.textContent='Not quite — try that stroke again'},onComplete:()=>{status.textContent='Character complete ✓';S().mark(c,['writing'],true);onComplete?.()}});return writer}
+let practiceChar=null,practiceWriter=null;
+function openPractice(c){practiceChar=c;q('#strokeHz').textContent=c.h;q('#strokePy').textContent=`${c.p||''} · ${c.contextMeaning||''}`;q('#strokePane').classList.add('on');requestAnimationFrame(()=>practiceWriter=createWriter(q('#target'),q('#strokeStatus'),c,{drawingWidth:22,outline:true}))}
+function watchPractice(){if(!practiceChar)return;const t=q('#target'),box=t.parentElement;t.innerHTML='';const z=Math.max(240,Math.floor(box.getBoundingClientRect().width||300));q('#strokeStatus').textContent='Watching…';practiceWriter=HanziWriter.create(t,practiceChar.h,{width:z,height:z,padding:24,showOutline:true,showCharacter:true,renderer:'canvas'});practiceWriter.animateCharacter({onComplete:()=>q('#strokeStatus').textContent='Tap Start over to practice.'})}
+function writingQuiz(c){const s=document.createElement('div');s.className='fp';s.innerHTML=`<div class="card"><div class="quizTop">TEST · 6/6</div><div class="quizBody writeBody"><div class="practicePrompt">Write <b>${c.h}</b> in stroke order</div><div class="writeSurface"><div class="writeTarget"></div></div><div class="writeStatus">Loading stroke practice…</div><button class="finishQuiz">Finish quiz</button></div></div>`;const surface=s.querySelector('.writeSurface');['pointerdown','pointermove','pointerup','pointercancel','touchstart','touchmove','touchend','touchcancel'].forEach(type=>surface.addEventListener(type,e=>e.stopPropagation(),{passive:type.startsWith('touch')}));s._start=()=>createWriter(s.querySelector('.writeTarget'),s.querySelector('.writeStatus'),c,{drawingWidth:28,outline:true,onComplete:()=>s.dataset.answered='1'});s.querySelector('.finishQuiz').onclick=e=>{e.preventDefault();e.stopPropagation();closeFocus();renderBoard(lessonPage);progress()};return s}
+function quizSlides(set){if(set.length!==6)return[];const o=shuffled(set);return[recallQuiz(o[0],'meaning',1),recallQuiz(o[1],'hanzi',2),recallQuiz(o[2],'pinyin',3),recallQuiz(o[3],'meaning',4),connectQuiz(set),writingQuiz(o[4])]}
 
-function buildQuizSlides(set){const base=unique(set),picks=shuffled(base),seq=[];for(let i=0;i<4;i++){const c=picks[i%picks.length]||base[0];seq.push(recallQuiz(c,['meaning','pinyin','hanzi'][i%3],i+1))}seq.push(connectQuiz(base));seq.push(writingQuiz(base[base.length-1]||base[0]));return seq}
-function openFocusConsolidated(set,start=0){
-  const clean=unique(set).slice(0,PAGE_SIZE);if(!clean.length)return;focusSet=clean;focusLearnCount=clean.length;focusActive=clamp(start,0,clean.length-1);
-  const focus=q('#focus'),pager=q('#pager'),count=q('#count');if(!focus||!pager)return;focus.classList.add('on');pager.className='pager consolidated-pager';pager.innerHTML='';
-  focusSlides=[...clean.map(learnSlide),...buildQuizSlides(clean)];const track=document.createElement('div');track.className='consolidated-track';focusSlides.forEach(s=>track.appendChild(s));pager.appendChild(track);pager._track=track;
-  installFocusGestures(pager);if(count)count.textContent=`${focusActive+1} of ${focusLearnCount}`;positionFocus(0,false);announceFocus();
-}
-function positionFocus(px=0,animate=false){const pager=q('#pager'),track=pager?._track;if(!pager||!track)return;pager.classList.toggle('settling',animate);track.style.transform=`translate3d(calc(${-focusActive*100}% + ${px}px),0,0)`}
-function announceFocus(){
-  const count=q('#count');if(focusActive<focusLearnCount){if(count)count.textContent=`${focusActive+1} of ${focusLearnCount}`;window.focusLastIndex=focusActive;try{state.seen[focusSet[focusActive].h]=1;saveState();refreshLessonLabels()}catch{}}
-  else{const qi=focusActive-focusLearnCount+1;if(count)count.textContent=`Test ${Math.min(qi,6)} of 6`;if(qi===6){const slide=focusSlides[focusActive];if(slide&&!slide.dataset.writerStarted){slide.dataset.writerStarted='1';requestAnimationFrame(()=>requestAnimationFrame(()=>slide._startWriter?.()))}}}
-}
-function settleFocus(to,v=0){const pager=q('#pager');focusActive=clamp(to,0,focusSlides.length-1);const ms=clamp(275-Math.abs(v)*65,220,315);pager?.style.setProperty('--settle',ms+'ms');positionFocus(0,true);clearTimeout(focusTimer);focusTimer=setTimeout(()=>pager?.classList.remove('settling'),ms+20);announceFocus()}
-function installFocusGestures(pager){
-  if(pager._suppressCapture)pager.removeEventListener('click',pager._suppressCapture,true);
-  pager._suppressCapture=e=>{if(now()<focusSuppressUntil){e.preventDefault();e.stopImmediatePropagation()}};pager.addEventListener('click',pager._suppressCapture,true);
-  pager.onpointerdown=e=>{if(e.button!=null&&e.button!==0)return;if(e.target.closest('input,.writeSurface,.writeTarget')){focusGesture={blocked:true,id:e.pointerId};return}focusGesture={id:e.pointerId,x:e.clientX,y:e.clientY,lastX:e.clientX,lastT:now(),vx:0,axis:null,drag:false}};
-  pager.onpointermove=e=>{const g=focusGesture;if(!g||g.blocked||g.id!==e.pointerId)return;const dx=e.clientX-g.x,dy=e.clientY-g.y,ax=Math.abs(dx),ay=Math.abs(dy);if(!g.axis){if(ax<7&&ay<7)return;if(ax>ay*1.12){g.axis='x';try{pager.setPointerCapture(e.pointerId)}catch{}}else if(ay>ax*1.16){g.axis='y';g.blocked=true;return}else return}if(g.axis!=='x')return;g.drag=true;const t=now(),dt=Math.max(1,t-g.lastT),iv=(e.clientX-g.lastX)/dt;g.vx=.72*g.vx+.28*iv;g.lastX=e.clientX;g.lastT=t;let move=dx;if((focusActive===0&&dx>0)||(focusActive===focusSlides.length-1&&dx<0))move=Math.sign(dx)*Math.min(20,Math.abs(dx)*.1);positionFocus(move,false);e.preventDefault()};
-  pager.onpointerup=e=>{const g=focusGesture;focusGesture=null;if(!g||g.id!==e.pointerId||g.blocked||!g.drag)return;focusSuppressUntil=now()+420;const dx=e.clientX-g.x,w=pager.clientWidth||innerWidth,proj=dx+g.vx*120;let to=focusActive;if(proj<-w*.16&&focusActive<focusSlides.length-1)to++;else if(proj>w*.16&&focusActive>0)to--;e.preventDefault();settleFocus(to,g.vx)};
-  pager.onpointercancel=()=>{focusGesture=null;settleFocus(focusActive)};
-}
-function closeFocusConsolidated(){q('#focus')?.classList.remove('on');focusGesture=null;clearTimeout(focusTimer)}
+function openFocus(set,start=0){const clean=unique(set).slice(0,6);if(!clean.length)return;focusSet=clean;learnCount=clean.length;active=clamp(start,0,learnCount-1);slides=[...clean.map(learnSlide),...quizSlides(clean)];const track=document.createElement('div');track.className='focusTrack';slides.forEach(s=>track.appendChild(s));q('#pager').replaceChildren(track);q('#pager')._track=track;q('#focus').classList.add('on');q('#focus').setAttribute('aria-hidden','false');position(0,false);announce()}
+function position(px=0,animate=false){const p=q('#pager'),t=p._track;if(!t)return;p.classList.toggle('settling',animate);t.style.transform=`translate3d(calc(${-active*100}% + ${px}px),0,0)`}
+function announce(){if(active<learnCount){q('#count').textContent=`${active+1} of ${learnCount}`;S().expose(focusSet[active])}else{const n=active-learnCount+1;q('#count').textContent=`Test ${n} of 6`;if(n===6){const s=slides[active];if(s&&!s.dataset.started){s.dataset.started='1';requestAnimationFrame(()=>requestAnimationFrame(()=>s._start?.()))}}}}
+function settle(to,v=0){active=clamp(to,0,slides.length-1);const ms=clamp(270-Math.abs(v)*55,215,305),p=q('#pager');p.style.setProperty('--settle',ms+'ms');position(0,true);clearTimeout(settleTimer);settleTimer=setTimeout(()=>p.classList.remove('settling'),ms+25);announce()}
+function installFocusSwipe(){const p=q('#pager');p.addEventListener('click',e=>{if(now()<suppressUntil){e.preventDefault();e.stopImmediatePropagation()}},true);p.onpointerdown=e=>{if(e.button!=null&&e.button!==0)return;if(e.target.closest('button,input,.writeSurface')){gesture={blocked:true,id:e.pointerId};return}gesture={id:e.pointerId,x:e.clientX,y:e.clientY,lastX:e.clientX,lastT:now(),vx:0,axis:null,drag:false}};p.onpointermove=e=>{const g=gesture;if(!g||g.blocked||g.id!==e.pointerId)return;const dx=e.clientX-g.x,dy=e.clientY-g.y,ax=Math.abs(dx),ay=Math.abs(dy);if(!g.axis){if(ax<7&&ay<7)return;if(ax>ay*1.12){g.axis='x';try{p.setPointerCapture(e.pointerId)}catch{}}else if(ay>ax*1.16){g.axis='y'}else return}if(g.axis==='y'){if(dy>0)e.preventDefault();return}g.drag=true;const t=now(),dt=Math.max(1,t-g.lastT);g.vx=.72*g.vx+.28*((e.clientX-g.lastX)/dt);g.lastX=e.clientX;g.lastT=t;let move=dx;if((active===0&&dx>0)||(active===slides.length-1&&dx<0))move=Math.sign(dx)*Math.min(20,Math.abs(dx)*.1);position(move,false);e.preventDefault()};p.onpointerup=e=>{const g=gesture;gesture=null;if(!g||g.id!==e.pointerId||g.blocked)return;const dx=e.clientX-g.x,dy=e.clientY-g.y;if(g.axis==='y'){if(dy>80&&Math.abs(dy)>Math.abs(dx)*1.25)closeFocus();return}if(!g.drag)return;suppressUntil=now()+360;const w=p.clientWidth||innerWidth,proj=dx+g.vx*120;let to=active;if(proj<-w*.16&&active<slides.length-1)to++;else if(proj>w*.16&&active>0)to--;e.preventDefault();settle(to,g.vx)};p.onpointercancel=()=>{gesture=null;settle(active)}}
+function closeFocus(){q('#focus').classList.remove('on');q('#focus').setAttribute('aria-hidden','true');gesture=null;clearTimeout(settleTimer)}
 
-/* ---------- Explore/progress ---------- */
-function recolorExplore(){qa('#wall .wt').forEach(el=>{const h=el.dataset.w||el.dataset.h||el.textContent.trim(),s=getSkill(h);el.classList.remove('ex-unseen','ex-learning','ex-mastered','ex-struggle');if(state?.mastered?.[h])el.classList.add('ex-mastered');else if((s.mistakes||0)>=2)el.classList.add('ex-struggle');else if(state?.seen?.[h])el.classList.add('ex-learning');else el.classList.add('ex-unseen')})}
-let coreProgress=null;
-function refreshProgressOnly(){refreshLessonLabels();recolorExplore();try{coreProgress?.()}catch{}}
+/* ---------- Explore/settings/nav ---------- */
+let filter='all';
+function exploreClass(c){if(state().mastered?.[c.h])return'ex-mastered';if((S().skill(c.h).mistakes||0)>=2)return'ex-struggle';if(state().seen?.[c.h])return'ex-learning';return'ex-unseen'}
+function filterMatch(c){if(filter==='all')return true;if(filter==='struggle')return!state().mastered?.[c.h]&&(S().skill(c.h).mistakes||0)>=2;return S().level(c)===filter}
+function renderExplore(){const term=(q('#search').value||'').trim().toLowerCase(),x=all().filter(c=>filterMatch(c)&&(!term||c.h.includes(term)||(c.p||'').toLowerCase().includes(term)||(c.contextMeaning||'').toLowerCase().includes(term)));q('#wall').innerHTML=x.map(c=>`<button class="wt ${exploreClass(c)}" data-h="${c.h}">${c.h}</button>`).join('');qa('#wall .wt').forEach(b=>b.onclick=()=>openFocus([char(b.dataset.h)],0))}
+function showScreen(name){qa('.screen').forEach(s=>s.classList.toggle('on',s.id===name+'Screen'));qa('.nav button').forEach(b=>b.classList.toggle('on',b.dataset.screen===name));if(name==='progress')progress();if(name==='explore')renderExplore()}
+function updateSettingsUI(){qa('[data-theme]').forEach(b=>b.classList.toggle('on',b.dataset.theme===state().theme));qa('[data-audio]').forEach(b=>b.classList.toggle('on',(b.dataset.audio==='on')===state().audio));q('#buildVersion').textContent=VERSION}
+function openSettings(){updateSettingsUI();q('#settingsSheet').classList.add('on')}
 
-/* ---------- install only after core data + init have completed ---------- */
-function install(){
-  if(!chars().length){setTimeout(install,40);return}
-  /* Core init has now populated byH, rendered the board and attached its legacy
-     listeners. Replace only the two interaction hosts, then take ownership once. */
-  coreProgress=typeof progress==='function'?progress:null;
-  isolateLegacyInteractions();markBuild();
-  try{window.progress=()=>{try{coreProgress?.()}catch{}refreshLessonLabels();recolorExplore()}}catch{}
-  try{window.openFocus=openFocusConsolidated}catch{}
-  const cont=q('#continue');if(cont){cont.textContent='Continue learning';cont.onclick=e=>{e.preventDefault();continueLearning()}}q('#mix')?.remove();
-  const close=q('#close');if(close)close.onclick=e=>{e.preventDefault();closeFocusConsolidated()};
-  const menu=q('#fMenu');if(menu)menu.onclick=e=>{e.preventDefault();q('#settingsSheet')?.classList.add('on')};
-  const closeStroke=q('#closeStroke');if(closeStroke)closeStroke.onclick=e=>{e.preventDefault();q('#strokePane')?.classList.remove('on');const t=q('#target');if(t)t.innerHTML=''};
-  const retry=q('#retry');if(retry)retry.onclick=e=>{e.preventDefault();retryPractice()};
-  const watch=q('#watch');if(watch)watch.onclick=e=>{e.preventDefault();watchPractice()};
-  renderLessonBoard(0);installBoardGestures();recolorExplore();
-  const wall=q('#wall');if(wall)new MutationObserver(recolorExplore).observe(wall,{childList:true,subtree:true});
-}
-setTimeout(install,0);
+/* ---------- diagnostics ---------- */
+function diagnostics(){const issues=[];const board=q('#board');if(!board)issues.push('missing board');if(q('#mix'))issues.push('legacy New mix present');if(board&&pages()[lessonPage]?.length===6&&board.children.length!==6)issues.push(`board child count ${board.children.length}`);if(q('#pager')?.querySelectorAll(':scope > .focusTrack').length>1)issues.push('multiple focus tracks');window.HanziDiagnostics={version:VERSION,issues,lessonPage,lessonSize:lessonChars().length,run:diagnostics};if(issues.length)console.error('[Hanzi consolidated diagnostics]',issues);else console.info('[Hanzi consolidated diagnostics] clean')}
+
+async function init(){try{await S().loadDataset()}catch(e){document.body.innerHTML=`<div style="font-family:system-ui;padding:32px">Could not load Hanzi dataset.<br><small>${String(e)}</small></div>`;return}S().applyTheme();q('#buildVersion').textContent=VERSION;renderBoard(0);installBoardSwipe();installFocusSwipe();progress();renderExplore();q('#continue').onclick=continueLearning;q('#close').onclick=closeFocus;q('#settings').onclick=q('#fMenu').onclick=openSettings;q('#doneSettings').onclick=()=>q('#settingsSheet').classList.remove('on');qa('[data-theme]').forEach(b=>b.onclick=()=>{state().theme=b.dataset.theme;S().save();S().applyTheme();updateSettingsUI()});qa('[data-audio]').forEach(b=>b.onclick=()=>{state().audio=b.dataset.audio==='on';S().save();updateSettingsUI()});qa('.nav button').forEach(b=>b.onclick=()=>showScreen(b.dataset.screen));qa('.chip').forEach(b=>b.onclick=()=>{qa('.chip').forEach(x=>x.classList.toggle('on',x===b));filter=b.dataset.filter;renderExplore()});q('#search').oninput=renderExplore;q('#closeStroke').onclick=()=>{q('#strokePane').classList.remove('on');q('#target').innerHTML=''};q('#retry').onclick=()=>practiceChar&&(practiceWriter=createWriter(q('#target'),q('#strokeStatus'),practiceChar,{drawingWidth:22,outline:true}));q('#watch').onclick=watchPractice;window.addEventListener('hanzi:state',progress);setTimeout(diagnostics,0)}
+if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',init,{once:true});else init();
 })();
