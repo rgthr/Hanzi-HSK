@@ -1,5 +1,5 @@
 /* HANZI CONSOLIDATED STATE
-   Version: CONSOLIDATED 2.0.0
+   Version: CONSOLIDATED 2.2.0
    Branch: clean-consolidation
    Sole responsibilities: dataset loading, persisted state, mastery helpers, theme/audio state.
    Storage keys are intentionally identical to main so progress is preserved.
@@ -9,7 +9,7 @@
 const STATE_KEY='hanzi_v1_state';
 const DATA_KEY='hanzi_hsk1_dataset_v1';
 const DATA_URL='https://raw.githubusercontent.com/rgthr/Hanzi-HSK/935c9a7580e08663a69682c1c004209b688bc88f/index.html';
-const defaults={skills:{},seen:{},mastered:{},theme:'system',audio:true,board:[],learnedSinceQuiz:0};
+const defaults={skills:{},seen:{},mastered:{},theme:'system',audio:true,board:[],learnedSinceQuiz:0,lessonCheckpoints:{}};
 let state;
 try{state=Object.assign({},defaults,JSON.parse(localStorage.getItem(STATE_KEY)||'{}'))}catch{state={...defaults}}
 state.skills=state.skills||{};state.seen=state.seen||{};state.mastered=state.mastered||{};
@@ -22,6 +22,7 @@ function expose(c){if(!c)return;if(!state.seen[c.h]){state.seen[c.h]=1;state.lea
 function level(c){if(state.mastered[c.h])return'mastered';if(state.seen[c.h])return'learning';return'new'}
 function resolvedTheme(){return state.theme==='system'?(matchMedia('(prefers-color-scheme:dark)').matches?'dark':'light'):state.theme}
 function applyTheme(){document.documentElement.dataset.theme=resolvedTheme()}
+function migrateLessonCheckpoints(){if(state.lessonCheckpoints&&Object.keys(state.lessonCheckpoints).length)return;state.lessonCheckpoints={};for(let i=0;i<ALL.length;i+=12){const lesson=i/12+1,block=ALL.slice(i,i+12),first=block.slice(0,6),second=block.slice(6,12);let cp=0;if(first.length&&first.every(c=>state.seen?.[c.h]))cp=1;if(second.length&&second.every(c=>state.seen?.[c.h]))cp=2;if(cp)state.lessonCheckpoints[lesson]=cp}save()}
 async function loadDataset(){
   let raw=localStorage.getItem(DATA_KEY);
   if(raw){try{ALL=JSON.parse(raw)}catch{raw=null}}
@@ -31,6 +32,7 @@ async function loadDataset(){
     ALL=JSON.parse(m[1]);localStorage.setItem(DATA_KEY,JSON.stringify(ALL));
   }
   byH=Object.fromEntries(ALL.map(c=>[c.h,c]));
+  migrateLessonCheckpoints();
   API.ALL=ALL;API.byH=byH;
   window.dispatchEvent(new CustomEvent('hanzi:data-ready'));
   return ALL;
